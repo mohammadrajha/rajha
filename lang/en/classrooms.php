@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'add' => 'Add Classroom',
+    'name' => 'Name',
+    'name_ar' => 'Name (Arabic)',
+    'building' => 'Building',
+    'floor' => 'Floor',
+    'capacity' => 'Capacity',
+    'schedules' => 'Schedules',
+    'status' => 'Status',
+    'active' => 'Active',
+    'inactive' => 'Inactive',
+    'qr' => 'QR',
+    'print_qr' => 'Print QR Code',
+    'qr_code' => 'QR Code',
+    'details' => 'Details',
+    'gps' => 'GPS Coordinates',
+    'gps_radius' => 'GPS Radius (m)',
+    'latitude' => 'Latitude',
+    'longitude' => 'Longitude',
+    'assigned_schedules' => 'Assigned Schedules',
+    'no_schedules' => 'No schedules assigned',
+    'regenerate_token' => 'Regenerate QR Token',
+    'regenerate_confirm' => 'This will invalidate the current QR code. Continue?',
+    'create_title' => 'Add Classroom',
+    'edit_title' => 'Edit Classroom',
+];
