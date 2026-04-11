@@ -18,6 +18,10 @@ return [
     'api_key' => env('EXTERNAL_API_KEY', ''),
     'api_timeout' => env('EXTERNAL_API_TIMEOUT', 30),
 
+    // Room schedule API base URL (e.g. https://your-server.com)
+    // The service calls GET {base_url}/api/rooms/{roomNo}/full-details
+    'room_api_base_url' => env('ROOM_API_BASE_URL', ''),
+
     // QR code settings
     'qr_size' => env('QR_CODE_SIZE', 300),
     'qr_format' => 'svg',
