@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'add' => 'إضافة قاعة',
+    'name' => 'الاسم',
+    'name_ar' => 'الاسم (عربي)',
+    'building' => 'المبنى',
+    'floor' => 'الطابق',
+    'capacity' => 'السعة',
+    'schedules' => 'الجداول',
+    'status' => 'الحالة',
+    'active' => 'فعال',
+    'inactive' => 'غير فعال',
+    'qr' => 'QR',
+    'print_qr' => 'طباعة رمز QR',
+    'qr_code' => 'رمز QR',
+    'details' => 'التفاصيل',
+    'gps' => 'إحداثيات GPS',
+    'gps_radius' => 'نطاق GPS (متر)',
+    'latitude' => 'خط العرض',
+    'longitude' => 'خط الطول',
+    'assigned_schedules' => 'الجداول المعينة',
+    'no_schedules' => 'لا توجد جداول معينة',
+    'regenerate_token' => 'إعادة إنشاء رمز QR',
+    'regenerate_confirm' => 'سيتم إبطال رمز QR الحالي. متابعة؟',
+    'create_title' => 'إضافة قاعة',
+    'edit_title' => 'تعديل القاعة',
+];
