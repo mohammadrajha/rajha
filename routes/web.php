@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HeadOfDepartment;
 use App\Http\Controllers\Instructor;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\RoomScheduleController;
 use App\Http\Controllers\ScanController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/scan', [ScanController::class, 'showScanPage'])->name('scan.page');
     Route::post('/scan', [ScanController::class, 'process'])->name('scan.submit');
     Route::get('/scan/{payload}', [ScanController::class, 'processFromUrl'])->name('scan.process');
+});
+
+// Room schedule lookup (QR scan -> room API)
+Route::middleware('auth')->group(function () {
+    Route::post('/room-schedule', [RoomScheduleController::class, 'lookup'])->name('room.schedule');
 });
 
 // Admin routes
