@@ -4,41 +4,50 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
-use App\Models\Instructor;
-use App\Models\Schedule;
+use App\Models\RoomSchedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    protected const DAY_MAP = [
+        0 => 'الأحد',
+        1 => 'الإثنين',
+        2 => 'الثلاثاء',
+        3 => 'الأربعاء',
+        4 => 'الخميس',
+        5 => 'الجمعة',
+        6 => 'السبت',
+    ];
+
     public function index()
     {
         $user = Auth::user();
-        $instructor = Instructor::where('user_id', $user->id)->first();
 
-        if (!$instructor) {
-            return view('instructor.no-profile');
+        if (!$user->instructor_name) {
+            return redirect()->route('instructor.profile');
         }
 
+        $instructorName = $user->instructor_name;
         $today = Carbon::today();
-        $dayOfWeek = $today->dayOfWeek;
+        $currentDay = self::DAY_MAP[$today->dayOfWeek] ?? '';
 
-        $todaySchedules = Schedule::where('instructor_id', $instructor->id)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('is_active', true)
-            ->with('classroom')
+        // Today's schedule from stored room_schedules
+        $todaySchedules = RoomSchedule::where('instructor_name', $instructorName)
+            ->where('day', $currentDay)
+            ->currentSemester()
             ->orderBy('start_time')
             ->get();
 
-        // Mark which schedules have been attended today
-        $todayAttendance = AttendanceLog::where('instructor_id', $instructor->id)
+        // Today's attendance records
+        $todayAttendance = AttendanceLog::where('instructor_name', $instructorName)
             ->whereDate('scanned_at', $today)
             ->whereIn('status', ['present', 'late'])
-            ->pluck('schedule_id')
+            ->pluck('room_schedule_id')
             ->toArray();
 
-        $recentLogs = AttendanceLog::where('instructor_id', $instructor->id)
-            ->with(['classroom', 'schedule'])
+        // Recent logs
+        $recentLogs = AttendanceLog::where('instructor_name', $instructorName)
             ->latest('scanned_at')
             ->take(10)
             ->get();
@@ -46,19 +55,16 @@ class DashboardController extends Controller
         // Monthly stats
         $monthStart = Carbon::now()->startOfMonth();
         $monthlyStats = [
-            'present' => AttendanceLog::where('instructor_id', $instructor->id)
-                ->where('scanned_at', '>=', $monthStart)
-                ->where('status', 'present')->count(),
-            'late' => AttendanceLog::where('instructor_id', $instructor->id)
-                ->where('scanned_at', '>=', $monthStart)
-                ->where('status', 'late')->count(),
-            'missed' => AttendanceLog::where('instructor_id', $instructor->id)
-                ->where('scanned_at', '>=', $monthStart)
-                ->where('status', 'missed')->count(),
+            'present' => AttendanceLog::where('instructor_name', $instructorName)
+                ->where('scanned_at', '>=', $monthStart)->where('status', 'present')->count(),
+            'late' => AttendanceLog::where('instructor_name', $instructorName)
+                ->where('scanned_at', '>=', $monthStart)->where('status', 'late')->count(),
+            'missed' => AttendanceLog::where('instructor_name', $instructorName)
+                ->where('scanned_at', '>=', $monthStart)->where('status', 'missed')->count(),
         ];
 
         return view('instructor.dashboard', compact(
-            'instructor', 'todaySchedules', 'todayAttendance', 'recentLogs', 'monthlyStats'
+            'user', 'instructorName', 'todaySchedules', 'todayAttendance', 'recentLogs', 'monthlyStats'
         ));
     }
 }

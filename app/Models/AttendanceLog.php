@@ -2,47 +2,39 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttendanceLog extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'instructor_id',
-        'schedule_id',
-        'classroom_id',
+        'instructor_name',
+        'room_no',
+        'room_schedule_id',
+        'dept_no',
+        'course_name',
         'status',
         'scanned_at',
         'delay_minutes',
-        'scan_latitude',
-        'scan_longitude',
-        'gps_valid',
-        'notes',
         'ip_address',
         'user_agent',
+        'notes',
     ];
 
     protected $casts = [
         'scanned_at' => 'datetime',
-        'gps_valid' => 'boolean',
+        'room_no' => 'integer',
+        'dept_no' => 'integer',
     ];
 
-    public function instructor(): BelongsTo
+    public function roomSchedule(): BelongsTo
     {
-        return $this->belongsTo(Instructor::class);
+        return $this->belongsTo(RoomSchedule::class);
     }
 
-    public function schedule(): BelongsTo
+    public function departmentEmail(): BelongsTo
     {
-        return $this->belongsTo(Schedule::class);
-    }
-
-    public function classroom(): BelongsTo
-    {
-        return $this->belongsTo(Classroom::class);
+        return $this->belongsTo(DepartmentEmail::class, 'dept_no', 'dept_no');
     }
 
     public function statusLabel(): string
@@ -62,9 +54,7 @@ class AttendanceLog extends Model
         return match ($this->status) {
             'present' => 'green',
             'late' => 'yellow',
-            'wrong_classroom' => 'red',
-            'no_lecture' => 'gray',
-            'missed' => 'red',
+            'wrong_classroom', 'missed' => 'red',
             default => 'gray',
         };
     }
@@ -77,5 +67,10 @@ class AttendanceLog extends Model
     public function scopeByStatus($query, string $status)
     {
         return $query->where('status', $status);
+    }
+
+    public function scopeForInstructor($query, string $name)
+    {
+        return $query->where('instructor_name', $name);
     }
 }

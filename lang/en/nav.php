@@ -2,10 +2,10 @@
 
 return [
     'dashboard' => 'Dashboard',
-    'classrooms' => 'Classrooms',
     'attendance' => 'Attendance',
-    'sync' => 'API Sync',
+    'departments' => 'Departments',
     'scan' => 'Scan QR',
+    'profile' => 'Profile',
     'logout' => 'Logout',
     'admin_dashboard' => 'Admin Dashboard',
     'instructor_dashboard' => 'Instructor Dashboard',

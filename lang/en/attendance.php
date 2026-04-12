@@ -11,9 +11,7 @@ return [
     'no_lecture_now' => 'No lecture scheduled at this time',
     'already_scanned' => 'Attendance already recorded for this lecture',
     'invalid_qr' => 'Invalid QR code',
-    'invalid_qr_token' => 'QR code token is invalid or expired',
-    'not_instructor' => 'Your account is not linked to an instructor profile',
+    'set_name_first' => 'Please set your instructor name in profile before scanning.',
     'details' => 'Attendance Details',
-    'gps_valid' => 'GPS Validated',
     'notes' => 'Notes',
 ];

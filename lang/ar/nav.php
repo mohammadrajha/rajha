@@ -2,10 +2,10 @@
 
 return [
     'dashboard' => 'لوحة التحكم',
-    'classrooms' => 'القاعات',
     'attendance' => 'الحضور',
-    'sync' => 'مزامنة البيانات',
+    'departments' => 'الأقسام',
     'scan' => 'مسح QR',
+    'profile' => 'الملف الشخصي',
     'logout' => 'تسجيل خروج',
     'admin_dashboard' => 'لوحة تحكم المدير',
     'instructor_dashboard' => 'لوحة تحكم المدرس',

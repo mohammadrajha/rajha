@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Instructor;
 use App\Services\AttendanceService;
-use App\Services\QrCodeService;
+use App\Services\RoomScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ScanController extends Controller
 {
     public function __construct(
-        protected QrCodeService $qrService,
+        protected RoomScheduleService $roomService,
         protected AttendanceService $attendanceService,
     ) {}
 
@@ -20,39 +19,40 @@ class ScanController extends Controller
         return view('scan.index');
     }
 
-    public function process(Request $request)
+    /**
+     * Called when instructor scans QR and confirms attendance.
+     */
+    public function markAttendance(Request $request)
     {
         $request->validate([
-            'payload' => 'required|string',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'room_no' => 'required|integer|min:1',
         ]);
 
-        // Decrypt and validate QR payload
-        $data = $this->qrService->decryptPayload($request->input('payload'));
-        if (!$data) {
-            return $this->respondError(__('attendance.invalid_qr'), $request);
-        }
-
-        $classroom = $this->qrService->validatePayload($data);
-        if (!$classroom) {
-            return $this->respondError(__('attendance.invalid_qr_token'), $request);
-        }
-
-        // Get instructor from logged-in user
         $user = Auth::user();
-        $instructor = Instructor::where('user_id', $user->id)->first();
 
-        if (!$instructor) {
-            return $this->respondError(__('attendance.not_instructor'), $request);
+        if (!$user->instructor_name) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('attendance.set_name_first'),
+                ], 422);
+            }
+            return redirect()->route('instructor.profile')
+                ->with('error', __('attendance.set_name_first'));
         }
 
-        // Process attendance
+        $roomNo = (int) $request->input('room_no');
+
+        // Ensure we have fresh schedule data for this room
+        try {
+            $this->roomService->getSchedule($roomNo);
+        } catch (\RuntimeException $e) {
+            // If API fails, try using stored data — it may still work
+        }
+
         $result = $this->attendanceService->processAttendance(
-            instructor: $instructor,
-            classroom: $classroom,
-            latitude: $request->input('latitude'),
-            longitude: $request->input('longitude'),
+            instructorName: $user->instructor_name,
+            roomNo: $roomNo,
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
         );
@@ -63,27 +63,7 @@ class ScanController extends Controller
 
         return view('scan.result', [
             'result' => $result,
-            'classroom' => $classroom,
-            'instructor' => $instructor,
-        ]);
-    }
-
-    public function processFromUrl(Request $request, string $payload)
-    {
-        $request->merge(['payload' => $payload]);
-        return $this->process($request);
-    }
-
-    protected function respondError(string $message, Request $request)
-    {
-        if ($request->expectsJson()) {
-            return response()->json(['status' => 'error', 'message' => $message], 422);
-        }
-
-        return view('scan.result', [
-            'result' => ['status' => 'error', 'message' => $message],
-            'classroom' => null,
-            'instructor' => null,
+            'roomNo' => $roomNo,
         ]);
     }
 }

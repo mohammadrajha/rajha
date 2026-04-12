@@ -19,7 +19,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <a href="{{ route('home') }}" class="text-xl font-bold text-indigo-600">
-                        📋 {{ __('app.title') }}
+                        {{ __('app.title') }}
                     </a>
                 </div>
 
@@ -28,14 +28,14 @@
                         <!-- Role-based navigation -->
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.dashboard') }}</a>
-                            <a href="{{ route('admin.classrooms.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.classrooms') }}</a>
                             <a href="{{ route('admin.attendance.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.attendance') }}</a>
-                            <a href="{{ route('admin.sync.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.sync') }}</a>
+                            <a href="{{ route('admin.departments.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.departments') }}</a>
                         @elseif(auth()->user()->isHeadOfDepartment())
                             <a href="{{ route('hod.dashboard') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.dashboard') }}</a>
                         @else
                             <a href="{{ route('instructor.dashboard') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.dashboard') }}</a>
                             <a href="{{ route('scan.page') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.scan') }}</a>
+                            <a href="{{ route('instructor.profile') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.profile') }}</a>
                         @endif
 
                         <!-- Language switcher -->

@@ -22,9 +22,9 @@
             <div class="text-5xl mb-4">{{ $c['icon'] }}</div>
             <div class="text-xl font-bold">{{ $result['message'] ?? __('scan.error') }}</div>
 
-            @if(isset($result['correct_classroom']))
+            @if(isset($result['correct_room']))
                 <div class="mt-3 text-base">
-                    {{ __('scan.correct_classroom') }}: <strong>{{ $result['correct_classroom'] }}</strong>
+                    {{ __('scan.correct_classroom') }}: <strong>{{ __('scan.room') }} {{ $result['correct_room'] }}</strong>
                 </div>
             @endif
 
@@ -35,9 +35,9 @@
             @endif
         </div>
 
-        @if($classroom)
+        @if(isset($roomNo))
             <div class="mt-6 text-sm text-gray-500">
-                {{ __('scan.scanned_classroom') }}: {{ $classroom->fullName() }}
+                {{ __('scan.scanned_classroom') }}: {{ __('scan.room') }} {{ $roomNo }}
             </div>
         @endif
 
