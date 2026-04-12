@@ -60,6 +60,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Sync rooms from external API
     Route::get('/sync-rooms', [Admin\SyncController::class, 'index'])->name('sync-rooms.index');
     Route::post('/sync-rooms', [Admin\SyncController::class, 'syncRooms'])->name('sync-rooms.run');
+
+    // Room schedules (synced data management)
+    Route::get('/room-schedules', [Admin\RoomScheduleController::class, 'index'])->name('room-schedules.index');
+    Route::get('/room-schedules/{roomSchedule}/edit', [Admin\RoomScheduleController::class, 'edit'])->name('room-schedules.edit');
+    Route::put('/room-schedules/{roomSchedule}', [Admin\RoomScheduleController::class, 'update'])->name('room-schedules.update');
+    Route::delete('/room-schedules/{roomSchedule}', [Admin\RoomScheduleController::class, 'destroy'])->name('room-schedules.destroy');
 });
 
 // Instructor routes

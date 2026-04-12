@@ -2,8 +2,10 @@
 
 return [
     'dashboard' => 'لوحة التحكم',
+    'rooms' => 'القاعات',
     'attendance' => 'الحضور',
     'departments' => 'الأقسام',
+    'sync' => 'مزامنة',
     'scan' => 'مسح QR',
     'profile' => 'الملف الشخصي',
     'logout' => 'تسجيل خروج',
