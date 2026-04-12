@@ -10,10 +10,11 @@ class RoomScheduleController extends Controller
 {
     public function index(Request $request)
     {
+        // Order by the public room code (ROOM_CODE) for display.
         $query = RoomSchedule::query()->orderBy('room_no')->orderBy('day')->orderBy('start_time');
 
         if ($request->filled('room_no')) {
-            $query->where('room_no', $request->room_no);
+            $query->where('room_no', 'like', "%{$request->room_no}%");
         }
 
         if ($request->filled('instructor_name')) {
@@ -33,7 +34,9 @@ class RoomScheduleController extends Controller
     public function update(Request $request, RoomSchedule $roomSchedule)
     {
         $validated = $request->validate([
-            'room_no'         => 'required|integer',
+            'room_id'         => 'nullable|integer',
+            'room_no'         => 'required|string|max:32',
+            'room_desc'       => 'nullable|string|max:255',
             'day'             => 'required|string|max:20',
             'start_time'      => 'required|string|max:10',
             'end_time'        => 'required|string|max:10',

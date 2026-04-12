@@ -22,6 +22,11 @@
         .room {
             font-size: 28px;
             font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .desc {
+            font-size: 14px;
+            color: #555;
             margin-bottom: 16px;
         }
         .hint {
@@ -39,6 +44,9 @@
     <div>
         <div class="card">
             <div class="room">{{ __('rooms_qr.room') }} {{ $roomNo }}</div>
+            @if(!empty($roomDesc))
+                <div class="desc">{{ $roomDesc }}</div>
+            @endif
             <div>{!! $svg !!}</div>
             <div class="hint">{{ __('rooms_qr.scan_hint') }}</div>
         </div>

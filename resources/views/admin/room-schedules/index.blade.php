@@ -13,7 +13,7 @@
 <!-- Filters -->
 <div class="bg-white rounded-xl shadow p-4 mb-6">
     <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input type="number" name="room_no" value="{{ request('room_no') }}"
+        <input type="text" name="room_no" value="{{ request('room_no') }}"
             placeholder="{{ __('rooms.room_no') }}"
             class="border rounded-lg px-3 py-2 text-sm">
         <input type="text" name="instructor_name" value="{{ request('instructor_name') }}"
@@ -34,6 +34,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('rooms.room_no') }}</th>
+                    <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('rooms.room_desc') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('rooms.day') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('rooms.start_time') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('rooms.end_time') }}</th>
@@ -47,7 +48,13 @@
             <tbody class="divide-y">
                 @forelse($schedules as $schedule)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-mono font-bold">{{ $schedule->room_no }}</td>
+                    <td class="px-4 py-3 font-mono font-bold">
+                        {{ $schedule->room_no }}
+                        @if($schedule->room_id)
+                            <div class="text-[10px] font-normal text-gray-400">ID: {{ $schedule->room_id }}</div>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">{{ $schedule->room_desc ?? '-' }}</td>
                     <td class="px-4 py-3">{{ $schedule->day }}</td>
                     <td class="px-4 py-3 font-mono text-gray-600">{{ $schedule->start_time }}</td>
                     <td class="px-4 py-3 font-mono text-gray-600">{{ $schedule->end_time }}</td>
@@ -67,7 +74,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="px-4 py-8 text-center text-gray-400">{{ __('table.no_records') }}</td>
+                    <td colspan="10" class="px-4 py-8 text-center text-gray-400">{{ __('table.no_records') }}</td>
                 </tr>
                 @endforelse
             </tbody>

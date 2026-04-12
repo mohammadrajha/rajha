@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('attendance_logs', function (Blueprint $table) {
             $table->id();
             $table->string('instructor_name');
-            $table->integer('room_no');
+            // Public classroom code scanned from the QR (ROOM_CODE).
+            $table->string('room_no');
             $table->foreignId('room_schedule_id')->nullable()->constrained('room_schedules')->nullOnDelete();
             $table->integer('dept_no')->nullable();
             $table->string('course_name')->nullable();

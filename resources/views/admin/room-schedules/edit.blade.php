@@ -13,9 +13,24 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('rooms.room_no') }}</label>
-                <input type="number" name="room_no" value="{{ old('room_no', $schedule->room_no) }}"
-                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500" required>
+                <input type="text" name="room_no" value="{{ old('room_no', $schedule->room_no) }}"
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 font-mono" required>
+                <p class="text-xs text-gray-500 mt-1">{{ __('rooms.room_no_hint') }}</p>
                 @error('room_no') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('rooms.room_id') }}</label>
+                <input type="number" name="room_id" value="{{ old('room_id', $schedule->room_id) }}"
+                    class="w-full border rounded-lg px-3 py-2 bg-gray-50 text-gray-500 font-mono" readonly>
+                <p class="text-xs text-gray-500 mt-1">{{ __('rooms.room_id_hint') }}</p>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('rooms.room_desc') }}</label>
+                <input type="text" name="room_desc" value="{{ old('room_desc', $schedule->room_desc) }}"
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+                @error('room_desc') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>

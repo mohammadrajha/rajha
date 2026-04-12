@@ -60,6 +60,8 @@ class SyncController extends Controller
                             'start_time' => $data['start_time'],
                         ],
                         [
+                            'room_id'         => $data['room_id'],
+                            'room_desc'       => $data['room_desc'],
                             'end_time'        => $data['end_time'],
                             'semester'        => $data['semester'],
                             'dept_no'         => $data['dept_no'],
@@ -105,10 +107,27 @@ class SyncController extends Controller
         return $payload;
     }
 
+    /**
+     * Map a raw API row to our storage columns.
+     *
+     * Final mapping:
+     *   ROOM_NO   -> room_id    (internal numeric identifier, not shown in UI)
+     *   ROOM_CODE -> room_no    (real classroom code shown to users, e.g. "10018")
+     *   ROOM_DESC -> room_desc  (human-readable description, e.g. "ق 18 طابق أرضي")
+     *
+     * Lowercase fallbacks (room_id/room_no/room_code/room_desc) are accepted so
+     * the sync works whether the Node API uses uppercase Oracle columns or a
+     * camelCased JSON shape.
+     */
     private function mapRow(array $row): array
     {
+        $roomCode = $row['ROOM_CODE'] ?? $row['room_code'] ?? $row['room_no'] ?? null;
+        $roomId   = $row['ROOM_NO']   ?? $row['room_id']   ?? null;
+
         return [
-            'room_no'         => $row['ROOM_NO']         ?? $row['room_no']         ?? null,
+            'room_id'         => $roomId !== null ? (int) $roomId : null,
+            'room_no'         => $roomCode !== null ? (string) $roomCode : null,
+            'room_desc'       => $row['ROOM_DESC']       ?? $row['room_desc']       ?? null,
             'day'             => $row['DAY']             ?? $row['day']             ?? null,
             'start_time'      => $row['START_TIME']      ?? $row['start_time']      ?? null,
             'end_time'        => $row['END_TIME']        ?? $row['end_time']        ?? null,

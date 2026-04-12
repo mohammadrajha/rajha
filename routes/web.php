@@ -70,7 +70,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Room QR codes
     Route::get('/rooms-qr', [Admin\RoomQrController::class, 'index'])->name('rooms-qr.index');
     Route::get('/rooms-qr/{roomNo}/print', [Admin\RoomQrController::class, 'print'])
-        ->whereNumber('roomNo')->name('rooms-qr.print');
+        ->where('roomNo', '[A-Za-z0-9_-]+')->name('rooms-qr.print');
 
     // Instructor email management
     Route::get('/instructor-emails', [Admin\InstructorEmailController::class, 'index'])->name('instructor-emails.index');
