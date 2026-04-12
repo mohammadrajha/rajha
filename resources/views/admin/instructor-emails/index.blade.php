@@ -5,6 +5,10 @@
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-800">{{ __('instructor_emails.title') }}</h1>
+    <a href="{{ route('admin.instructor-emails.create') }}"
+       class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">
+        {{ __('instructor_emails.add_new') }}
+    </a>
 </div>
 
 <p class="text-gray-500 text-sm mb-4">{{ __('instructor_emails.description') }}</p>
@@ -46,8 +50,17 @@
                         @endif
                     </td>
                     <td class="px-4 py-3">
-                        <a href="{{ route('admin.instructor-emails.edit', $user) }}"
-                           class="text-indigo-600 hover:underline text-xs">{{ __('table.edit') }}</a>
+                        <div class="flex items-center space-x-3 rtl:space-x-reverse">
+                            <a href="{{ route('admin.instructor-emails.edit', $user) }}"
+                               class="text-indigo-600 hover:underline text-xs">{{ __('table.edit') }}</a>
+                            <form method="POST" action="{{ route('admin.instructor-emails.destroy', $user) }}"
+                                  onsubmit="return confirm('{{ __('instructor_emails.confirm_delete') }}');"
+                                  class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline text-xs">{{ __('table.delete') }}</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

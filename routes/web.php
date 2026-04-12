@@ -74,8 +74,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Instructor email management
     Route::get('/instructor-emails', [Admin\InstructorEmailController::class, 'index'])->name('instructor-emails.index');
+    Route::get('/instructor-emails/create', [Admin\InstructorEmailController::class, 'create'])->name('instructor-emails.create');
+    Route::post('/instructor-emails', [Admin\InstructorEmailController::class, 'store'])->name('instructor-emails.store');
     Route::get('/instructor-emails/{user}/edit', [Admin\InstructorEmailController::class, 'edit'])->name('instructor-emails.edit');
     Route::put('/instructor-emails/{user}', [Admin\InstructorEmailController::class, 'update'])->name('instructor-emails.update');
+    Route::delete('/instructor-emails/{user}', [Admin\InstructorEmailController::class, 'destroy'])->name('instructor-emails.destroy');
 });
 
 // Instructor routes
