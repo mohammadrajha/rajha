@@ -66,6 +66,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/room-schedules/{roomSchedule}/edit', [Admin\RoomScheduleController::class, 'edit'])->name('room-schedules.edit');
     Route::put('/room-schedules/{roomSchedule}', [Admin\RoomScheduleController::class, 'update'])->name('room-schedules.update');
     Route::delete('/room-schedules/{roomSchedule}', [Admin\RoomScheduleController::class, 'destroy'])->name('room-schedules.destroy');
+
+    // Room QR codes
+    Route::get('/rooms-qr', [Admin\RoomQrController::class, 'index'])->name('rooms-qr.index');
+    Route::get('/rooms-qr/{roomNo}/print', [Admin\RoomQrController::class, 'print'])
+        ->whereNumber('roomNo')->name('rooms-qr.print');
+
+    // Instructor email management
+    Route::get('/instructor-emails', [Admin\InstructorEmailController::class, 'index'])->name('instructor-emails.index');
+    Route::get('/instructor-emails/{user}/edit', [Admin\InstructorEmailController::class, 'edit'])->name('instructor-emails.edit');
+    Route::put('/instructor-emails/{user}', [Admin\InstructorEmailController::class, 'update'])->name('instructor-emails.update');
 });
 
 // Instructor routes

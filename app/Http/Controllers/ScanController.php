@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\RoomScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ScanController extends Controller
 {
@@ -20,7 +22,12 @@ class ScanController extends Controller
     }
 
     /**
-     * Called when instructor scans QR and confirms attendance.
+     * Called when an authenticated instructor scans a room QR and confirms attendance.
+     *
+     * The authenticated user's personal email is the identity key. We resolve the
+     * matching instructor record (users.email -> users.instructor_name) and pass the
+     * instructor_name into the attendance service so it can be matched against the
+     * API-sourced room_schedules table.
      */
     public function markAttendance(Request $request)
     {
@@ -28,12 +35,19 @@ class ScanController extends Controller
             'room_no' => 'required|integer|min:1',
         ]);
 
-        $user = Auth::user();
+        $authUser = Auth::user();
 
-        if (!$user->instructor_name) {
+        // Identify the instructor strictly by their authenticated email.
+        $instructor = User::where('email', $authUser->email)
+            ->where('role', 'instructor')
+            ->first();
+
+        if (!$instructor || !$instructor->instructor_name) {
+            Log::info('Scan rejected: instructor email not linked', ['email' => $authUser->email]);
+
             if ($request->expectsJson()) {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => __('attendance.set_name_first'),
                 ], 422);
             }
@@ -43,19 +57,21 @@ class ScanController extends Controller
 
         $roomNo = (int) $request->input('room_no');
 
-        // Ensure we have fresh schedule data for this room
+        // Refresh room data from API when available; fall back to stored rows on failure.
         try {
             $this->roomService->getSchedule($roomNo);
         } catch (\RuntimeException $e) {
-            // If API fails, try using stored data — it may still work
+            Log::info('Room API refresh failed, using stored schedule', ['room_no' => $roomNo]);
         }
 
         $result = $this->attendanceService->processAttendance(
-            instructorName: $user->instructor_name,
+            instructorName: $instructor->instructor_name,
             roomNo: $roomNo,
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
         );
+
+        $result['instructor_email'] = $instructor->email;
 
         if ($request->expectsJson()) {
             return response()->json($result);
