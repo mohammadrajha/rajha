@@ -23,7 +23,7 @@ class AttendanceLog extends Model
 
     protected $casts = [
         'scanned_at' => 'datetime',
-        'room_no' => 'integer',
+        'room_no' => 'string',
         'dept_no' => 'integer',
     ];
 

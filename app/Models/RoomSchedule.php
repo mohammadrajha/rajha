@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RoomSchedule extends Model
 {
     protected $fillable = [
+        'room_id',
         'room_no',
+        'room_desc',
         'day',
         'start_time',
         'end_time',
@@ -19,9 +21,10 @@ class RoomSchedule extends Model
     ];
 
     protected $casts = [
-        'room_no' => 'integer',
+        'room_id'  => 'integer',
+        'room_no'  => 'string',
         'semester' => 'integer',
-        'dept_no' => 'integer',
+        'dept_no'  => 'integer',
     ];
 
     public function departmentEmail(): BelongsTo
@@ -34,7 +37,7 @@ class RoomSchedule extends Model
         return $query->where('semester', 20252);
     }
 
-    public function scopeForRoom($query, int $roomNo)
+    public function scopeForRoom($query, string $roomNo)
     {
         return $query->where('room_no', $roomNo);
     }

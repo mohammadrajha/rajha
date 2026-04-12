@@ -32,7 +32,7 @@ class ScanController extends Controller
     public function markAttendance(Request $request)
     {
         $request->validate([
-            'room_no' => 'required|integer|min:1',
+            'room_no' => 'required|string|max:32',
         ]);
 
         $authUser = Auth::user();
@@ -55,7 +55,7 @@ class ScanController extends Controller
                 ->with('error', __('attendance.set_name_first'));
         }
 
-        $roomNo = (int) $request->input('room_no');
+        $roomNo = trim((string) $request->input('room_no'));
 
         // Refresh room data from API when available; fall back to stored rows on failure.
         try {

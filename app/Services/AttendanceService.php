@@ -25,7 +25,7 @@ class AttendanceService
      */
     public function processAttendance(
         string $instructorName,
-        int $roomNo,
+        string $roomNo,
         ?string $ipAddress = null,
         ?string $userAgent = null,
     ): array {
@@ -122,7 +122,7 @@ class AttendanceService
 
     protected function createLog(
         string $instructorName,
-        int $roomNo,
+        string $roomNo,
         ?RoomSchedule $lecture,
         string $status,
         Carbon $scannedAt,

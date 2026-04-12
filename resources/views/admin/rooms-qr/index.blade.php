@@ -16,13 +16,14 @@
     </div>
 @else
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        @foreach($rooms as $roomNo)
+        @foreach($rooms as $room)
             <div class="bg-white rounded-xl shadow p-4 text-center">
-                <div class="font-bold text-lg text-gray-800 mb-2">{{ __('rooms_qr.room') }} {{ $roomNo }}</div>
+                <div class="font-bold text-lg text-gray-800">{{ __('rooms_qr.room') }} {{ $room->room_no }}</div>
+                <div class="text-xs text-gray-500 mb-2 h-4">{{ $room->room_desc }}</div>
                 <div class="flex justify-center mb-3">
-                    {!! $qrCodes[$roomNo] !!}
+                    {!! $qrCodes[$room->room_no] !!}
                 </div>
-                <a href="{{ route('admin.rooms-qr.print', $roomNo) }}" target="_blank"
+                <a href="{{ route('admin.rooms-qr.print', $room->room_no) }}" target="_blank"
                    class="inline-block text-indigo-600 hover:underline text-sm">
                     {{ __('rooms_qr.print') }}
                 </a>

@@ -13,8 +13,13 @@ class RoomScheduleService
 
     /**
      * Fetch room schedule from API, filter to current semester, and persist.
+     *
+     * Takes the public ROOM_CODE (e.g. "10018"), resolves the internal
+     * ROOM_NO (room_id) from stored data, and calls the single-room API
+     * with that internal id. Throws if no mapping is known yet — the
+     * caller is expected to fall back to already-stored data.
      */
-    public function getSchedule(int $roomNo): array
+    public function getSchedule(string $roomCode): array
     {
         $baseUrl = rtrim(config('attendance.room_api_base_url', ''), '/');
 
@@ -22,11 +27,19 @@ class RoomScheduleService
             throw new \RuntimeException('Room API base URL is not configured.');
         }
 
+        $roomId = RoomSchedule::where('room_no', $roomCode)
+            ->currentSemester()
+            ->value('room_id');
+
+        if (!$roomId) {
+            throw new \RuntimeException("Unknown room code: {$roomCode}");
+        }
+
         $response = Http::timeout(config('attendance.api_timeout', 30))
-            ->get("{$baseUrl}/api/rooms/{$roomNo}/full-details");
+            ->get("{$baseUrl}/api/rooms/{$roomId}/full-details");
 
         if (!$response->successful()) {
-            Log::warning("Room API error for room {$roomNo}: HTTP {$response->status()}");
+            Log::warning("Room API error for room_id {$roomId} (code {$roomCode}): HTTP {$response->status()}");
             throw new \RuntimeException("Failed to fetch room schedule (HTTP {$response->status()}).");
         }
 
@@ -42,7 +55,7 @@ class RoomScheduleService
         }));
 
         // Persist to database
-        $this->storeSchedules($roomNo, $filtered);
+        $this->storeSchedules($roomCode, $roomId, $filtered);
 
         return $filtered;
     }
@@ -50,22 +63,24 @@ class RoomScheduleService
     /**
      * Store fetched schedule records, replacing old data for this room.
      */
-    protected function storeSchedules(int $roomNo, array $records): void
+    protected function storeSchedules(string $roomCode, int $roomId, array $records): void
     {
         // Remove old records for this room+semester so we always have fresh data
-        RoomSchedule::where('room_no', $roomNo)
+        RoomSchedule::where('room_no', $roomCode)
             ->where('semester', self::SEMESTER)
             ->delete();
 
         foreach ($records as $record) {
             RoomSchedule::create([
-                'room_no' => $record['room_no'] ?? $roomNo,
-                'day' => $record['day'] ?? '',
-                'start_time' => $record['start_time'] ?? '',
-                'end_time' => $record['end_time'] ?? '',
-                'semester' => self::SEMESTER,
-                'dept_no' => $record['dept_no'] ?? 0,
-                'course_name' => $record['course_name'] ?? '',
+                'room_id'         => $record['room_id'] ?? $roomId,
+                'room_no'         => (string) ($record['room_no'] ?? $roomCode),
+                'room_desc'       => $record['room_desc'] ?? null,
+                'day'             => $record['day'] ?? '',
+                'start_time'      => $record['start_time'] ?? '',
+                'end_time'        => $record['end_time'] ?? '',
+                'semester'        => self::SEMESTER,
+                'dept_no'         => $record['dept_no'] ?? 0,
+                'course_name'     => $record['course_name'] ?? '',
                 'instructor_name' => $record['instructor_name'] ?? '',
             ]);
 
@@ -83,18 +98,18 @@ class RoomScheduleService
     /**
      * Get stored schedule for a room (from DB, no API call).
      */
-    public function getStoredSchedule(int $roomNo): \Illuminate\Database\Eloquent\Collection
+    public function getStoredSchedule(string $roomCode): \Illuminate\Database\Eloquent\Collection
     {
-        return RoomSchedule::forRoom($roomNo)->currentSemester()->get();
+        return RoomSchedule::forRoom($roomCode)->currentSemester()->get();
     }
 
     /**
      * Find the current lecture for an instructor in a specific room.
      */
-    public function findCurrentLecture(string $instructorName, int $roomNo, string $currentDay, string $currentTime): ?RoomSchedule
+    public function findCurrentLecture(string $instructorName, string $roomCode, string $currentDay, string $currentTime): ?RoomSchedule
     {
         return RoomSchedule::where('instructor_name', $instructorName)
-            ->where('room_no', $roomNo)
+            ->where('room_no', $roomCode)
             ->where('day', $currentDay)
             ->where('semester', self::SEMESTER)
             ->where('start_time', '<=', $currentTime)

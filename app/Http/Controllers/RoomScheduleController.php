@@ -17,10 +17,10 @@ class RoomScheduleController extends Controller
     public function lookup(Request $request)
     {
         $request->validate([
-            'room_no' => 'required|integer|min:1',
+            'room_no' => 'required|string|max:32',
         ]);
 
-        $roomNo = (int) $request->input('room_no');
+        $roomNo = trim((string) $request->input('room_no'));
 
         try {
             $schedules = $this->roomService->getSchedule($roomNo);
