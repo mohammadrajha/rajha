@@ -2,8 +2,7 @@
 
 return [
     'all_statuses' => 'All Statuses',
-    'all_instructors' => 'All Instructors',
-    'all_departments' => 'All Departments',
+    'instructor_name' => 'Instructor Name',
     'from' => 'From',
     'to' => 'To',
     'filter' => 'Filter',

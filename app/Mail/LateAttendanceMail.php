@@ -21,7 +21,7 @@ class LateAttendanceMail extends Mailable
     {
         $status = $this->log->status === 'missed' ? 'Missed' : 'Late';
         return new Envelope(
-            subject: "[Attendance Alert] {$status}: {$this->log->instructor->name} - {$this->log->schedule?->course_name}",
+            subject: "[Attendance Alert] {$status}: {$this->log->instructor_name} - {$this->log->course_name}",
         );
     }
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\HeadOfDepartment;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
-use App\Models\Department;
-use App\Models\Instructor;
+use App\Models\DepartmentEmail;
+use App\Models\RoomSchedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,42 +14,45 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $department = Department::where('head_user_id', $user->id)->first();
 
-        if (!$department) {
+        // Find department(s) where this user's email is the head_email
+        $departments = DepartmentEmail::where('head_email', $user->email)->get();
+
+        if ($departments->isEmpty()) {
             return view('hod.no-department');
         }
 
-        $instructors = Instructor::where('department_id', $department->id)
-            ->where('is_active', true)
-            ->get();
-
-        $instructorIds = $instructors->pluck('id');
+        $deptNos = $departments->pluck('dept_no')->toArray();
 
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
 
+        // Instructors in these departments
+        $instructorNames = RoomSchedule::whereIn('dept_no', $deptNos)
+            ->currentSemester()
+            ->distinct()
+            ->pluck('instructor_name');
+
         $todayStats = [
-            'present' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'present' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->whereDate('scanned_at', $today)->where('status', 'present')->count(),
-            'late' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'late' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->whereDate('scanned_at', $today)->where('status', 'late')->count(),
-            'missed' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'missed' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->whereDate('scanned_at', $today)->where('status', 'missed')->count(),
         ];
 
         $monthlyStats = [
-            'present' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'present' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->where('scanned_at', '>=', $monthStart)->where('status', 'present')->count(),
-            'late' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'late' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->where('scanned_at', '>=', $monthStart)->where('status', 'late')->count(),
-            'missed' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+            'missed' => AttendanceLog::whereIn('dept_no', $deptNos)
                 ->where('scanned_at', '>=', $monthStart)->where('status', 'missed')->count(),
         ];
 
-        $recentAlerts = AttendanceLog::whereIn('instructor_id', $instructorIds)
+        $recentAlerts = AttendanceLog::whereIn('dept_no', $deptNos)
             ->whereIn('status', ['late', 'missed'])
-            ->with(['instructor', 'schedule', 'classroom'])
             ->latest('scanned_at')
             ->take(20)
             ->get();
@@ -60,40 +63,17 @@ class DashboardController extends Controller
             $date = Carbon::today()->subDays($i);
             $weeklyData[] = [
                 'date' => $date->format('M d'),
-                'present' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+                'present' => AttendanceLog::whereIn('dept_no', $deptNos)
                     ->whereDate('scanned_at', $date)->where('status', 'present')->count(),
-                'late' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+                'late' => AttendanceLog::whereIn('dept_no', $deptNos)
                     ->whereDate('scanned_at', $date)->where('status', 'late')->count(),
-                'missed' => AttendanceLog::whereIn('instructor_id', $instructorIds)
+                'missed' => AttendanceLog::whereIn('dept_no', $deptNos)
                     ->whereDate('scanned_at', $date)->where('status', 'missed')->count(),
             ];
         }
 
         return view('hod.dashboard', compact(
-            'department', 'instructors', 'todayStats', 'monthlyStats', 'recentAlerts', 'weeklyData'
+            'departments', 'instructorNames', 'todayStats', 'monthlyStats', 'recentAlerts', 'weeklyData'
         ));
-    }
-
-    public function instructorReport(Instructor $instructor)
-    {
-        $user = Auth::user();
-        $department = Department::where('head_user_id', $user->id)->first();
-
-        if (!$department || $instructor->department_id !== $department->id) {
-            abort(403);
-        }
-
-        $logs = AttendanceLog::where('instructor_id', $instructor->id)
-            ->with(['classroom', 'schedule'])
-            ->latest('scanned_at')
-            ->paginate(25);
-
-        $stats = [
-            'present' => AttendanceLog::where('instructor_id', $instructor->id)->where('status', 'present')->count(),
-            'late' => AttendanceLog::where('instructor_id', $instructor->id)->where('status', 'late')->count(),
-            'missed' => AttendanceLog::where('instructor_id', $instructor->id)->where('status', 'missed')->count(),
-        ];
-
-        return view('hod.instructor-report', compact('instructor', 'logs', 'stats'));
     }
 }

@@ -4,7 +4,11 @@
 
 @section('content')
 <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ __('nav.hod_dashboard') }}</h1>
-<p class="text-gray-500 mb-6">{{ $department->localizedName() }}</p>
+<p class="text-gray-500 mb-6">
+    @foreach($departments as $dept)
+        <span class="inline-block bg-indigo-50 text-indigo-700 text-sm px-2 py-1 rounded mr-1">{{ $dept->dept_name ?? $dept->dept_no }}</span>
+    @endforeach
+</p>
 
 <!-- Today Stats -->
 <div class="grid grid-cols-3 gap-4 mb-8">
@@ -51,15 +55,16 @@
     <!-- Instructors -->
     <div class="bg-white rounded-xl shadow">
         <div class="p-4 border-b">
-            <h2 class="text-lg font-semibold text-gray-800">{{ __('hod.instructors') }} ({{ $instructors->count() }})</h2>
+            <h2 class="text-lg font-semibold text-gray-800">{{ __('hod.instructors') }} ({{ $instructorNames->count() }})</h2>
         </div>
         <div class="divide-y max-h-96 overflow-y-auto">
-            @foreach($instructors as $inst)
-                <a href="{{ route('hod.instructor.report', $inst) }}" class="block px-4 py-3 hover:bg-gray-50">
-                    <div class="font-medium text-gray-800">{{ $inst->localizedName() }}</div>
-                    <div class="text-xs text-gray-400">{{ $inst->email }}</div>
-                </a>
-            @endforeach
+            @forelse($instructorNames as $name)
+                <div class="px-4 py-3">
+                    <div class="font-medium text-gray-800">{{ $name }}</div>
+                </div>
+            @empty
+                <p class="text-gray-400 text-center py-4">{{ __('table.no_records') }}</p>
+            @endforelse
         </div>
     </div>
 
@@ -73,8 +78,8 @@
                 <div class="px-4 py-3">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-sm font-medium">{{ $alert->instructor->name }}</div>
-                            <div class="text-xs text-gray-500">{{ $alert->schedule?->course_name ?? '-' }} - {{ $alert->classroom->name }}</div>
+                            <div class="text-sm font-medium">{{ $alert->instructor_name }}</div>
+                            <div class="text-xs text-gray-500">{{ $alert->course_name ?? '-' }} - {{ __('scan.room') }} {{ $alert->room_no }}</div>
                         </div>
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                             {{ $alert->status === 'late' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700' }}">

@@ -30,21 +30,15 @@
             <table class="info-table">
                 <tr>
                     <td>Instructor / المدرس</td>
-                    <td><strong>{{ $log->instructor->name }}</strong></td>
+                    <td><strong>{{ $log->instructor_name }}</strong></td>
                 </tr>
-                @if($log->schedule)
                 <tr>
                     <td>Course / المادة</td>
-                    <td><strong>{{ $log->schedule->course_name }}</strong></td>
+                    <td><strong>{{ $log->course_name ?? '-' }}</strong></td>
                 </tr>
                 <tr>
-                    <td>Scheduled Time / الوقت</td>
-                    <td>{{ \Carbon\Carbon::parse($log->schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($log->schedule->end_time)->format('H:i') }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Classroom / القاعة</td>
-                    <td>{{ $log->classroom->name }}</td>
+                    <td>Room / القاعة</td>
+                    <td>{{ $log->room_no }}</td>
                 </tr>
                 <tr>
                     <td>Status / الحالة</td>

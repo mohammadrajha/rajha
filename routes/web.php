@@ -34,8 +34,7 @@ Route::get('/home', function () {
 // Scan routes (instructor must be logged in)
 Route::middleware('auth')->group(function () {
     Route::get('/scan', [ScanController::class, 'showScanPage'])->name('scan.page');
-    Route::post('/scan', [ScanController::class, 'process'])->name('scan.submit');
-    Route::get('/scan/{payload}', [ScanController::class, 'processFromUrl'])->name('scan.process');
+    Route::post('/scan/mark', [ScanController::class, 'markAttendance'])->name('scan.mark');
 });
 
 // Room schedule lookup (QR scan -> room API)
@@ -47,27 +46,26 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
-    // Classrooms
-    Route::resource('classrooms', Admin\ClassroomController::class);
-    Route::get('/classrooms/{classroom}/print-qr', [Admin\ClassroomController::class, 'printQr'])->name('classrooms.print-qr');
-    Route::post('/classrooms/{classroom}/regenerate-token', [Admin\ClassroomController::class, 'regenerateToken'])->name('classrooms.regenerate-token');
-
     // Attendance logs
     Route::get('/attendance', [Admin\AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/{log}', [Admin\AttendanceController::class, 'show'])->name('attendance.show');
 
-    // Sync
-    Route::get('/sync', [Admin\SyncController::class, 'index'])->name('sync.index');
-    Route::post('/sync/now', [Admin\SyncController::class, 'syncNow'])->name('sync.now');
+    // Department email mapping
+    Route::get('/departments', [Admin\DepartmentEmailController::class, 'index'])->name('departments.index');
+    Route::get('/departments/create', [Admin\DepartmentEmailController::class, 'create'])->name('departments.create');
+    Route::post('/departments', [Admin\DepartmentEmailController::class, 'store'])->name('departments.store');
+    Route::get('/departments/{department}/edit', [Admin\DepartmentEmailController::class, 'edit'])->name('departments.edit');
+    Route::put('/departments/{department}', [Admin\DepartmentEmailController::class, 'update'])->name('departments.update');
 });
 
 // Instructor routes
 Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor'])->group(function () {
     Route::get('/dashboard', [Instructor\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [Instructor\ProfileController::class, 'edit'])->name('profile');
+    Route::put('/profile', [Instructor\ProfileController::class, 'update'])->name('profile.update');
 });
 
 // Head of Department routes
 Route::prefix('hod')->name('hod.')->middleware(['auth', 'role:head_of_department'])->group(function () {
     Route::get('/dashboard', [HeadOfDepartment\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/instructor/{instructor}', [HeadOfDepartment\DashboardController::class, 'instructorReport'])->name('instructor.report');
 });

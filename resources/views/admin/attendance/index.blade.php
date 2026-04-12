@@ -16,21 +16,9 @@
             <option value="wrong_classroom" {{ request('status') === 'wrong_classroom' ? 'selected' : '' }}>{{ __('attendance.wrong_classroom') }}</option>
         </select>
 
-        <select name="instructor_id" class="border rounded-lg px-3 py-2 text-sm">
-            <option value="">{{ __('filters.all_instructors') }}</option>
-            @foreach($instructors as $inst)
-                <option value="{{ $inst->id }}" {{ request('instructor_id') == $inst->id ? 'selected' : '' }}>{{ $inst->name }}</option>
-            @endforeach
-        </select>
-
-        <select name="department_id" class="border rounded-lg px-3 py-2 text-sm">
-            <option value="">{{ __('filters.all_departments') }}</option>
-            @foreach($departments as $dept)
-                <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
-            @endforeach
-        </select>
-
-        <input type="date" name="date_from" value="{{ request('date_from') }}" class="border rounded-lg px-3 py-2 text-sm" placeholder="{{ __('filters.from') }}">
+        <input type="text" name="instructor_name" value="{{ request('instructor_name') }}" placeholder="{{ __('filters.instructor_name') }}" class="border rounded-lg px-3 py-2 text-sm">
+        <input type="number" name="room_no" value="{{ request('room_no') }}" placeholder="{{ __('scan.room_number_placeholder') }}" class="border rounded-lg px-3 py-2 text-sm">
+        <input type="date" name="date_from" value="{{ request('date_from') }}" class="border rounded-lg px-3 py-2 text-sm">
         <div class="flex space-x-2 rtl:space-x-reverse">
             <input type="date" name="date_to" value="{{ request('date_to') }}" class="border rounded-lg px-3 py-2 text-sm flex-1">
             <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">{{ __('filters.filter') }}</button>
@@ -38,7 +26,6 @@
     </form>
 </div>
 
-<!-- Table -->
 <div class="bg-white rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -46,43 +33,35 @@
                 <tr>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.instructor') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.course') }}</th>
-                    <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.classroom') }}</th>
+                    <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('scan.room') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.status') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.delay') }}</th>
-                    <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.time') }}</th>
                     <th class="px-4 py-3 text-start font-medium text-gray-600">{{ __('table.date') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
                 @forelse($logs as $log)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3">{{ $log->instructor->name }}</td>
-                    <td class="px-4 py-3">{{ $log->schedule?->course_name ?? '-' }}</td>
-                    <td class="px-4 py-3">{{ $log->classroom->name }}</td>
+                    <td class="px-4 py-3">{{ $log->instructor_name }}</td>
+                    <td class="px-4 py-3">{{ $log->course_name ?? '-' }}</td>
+                    <td class="px-4 py-3">{{ $log->room_no }}</td>
                     <td class="px-4 py-3">
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                             {{ $log->status === 'present' ? 'bg-green-100 text-green-700' : '' }}
                             {{ $log->status === 'late' ? 'bg-yellow-100 text-yellow-700' : '' }}
                             {{ $log->status === 'missed' ? 'bg-red-100 text-red-700' : '' }}
                             {{ $log->status === 'wrong_classroom' ? 'bg-orange-100 text-orange-700' : '' }}
-                            {{ $log->status === 'no_lecture' ? 'bg-gray-100 text-gray-700' : '' }}
-                        ">
-                            {{ $log->statusLabel() }}
-                        </span>
+                        ">{{ $log->statusLabel() }}</span>
                     </td>
                     <td class="px-4 py-3 text-gray-500">{{ $log->delay_minutes > 0 ? $log->delay_minutes . ' min' : '-' }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ $log->scanned_at->format('H:i') }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ $log->scanned_at->format('Y-m-d') }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ $log->scanned_at->format('Y-m-d H:i') }}</td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-400">{{ __('table.no_records') }}</td>
-                </tr>
+                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">{{ __('table.no_records') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
-
 <div class="mt-4">{{ $logs->links() }}</div>
 @endsection

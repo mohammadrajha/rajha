@@ -2,8 +2,7 @@
 
 return [
     'all_statuses' => 'جميع الحالات',
-    'all_instructors' => 'جميع المدرسين',
-    'all_departments' => 'جميع الأقسام',
+    'instructor_name' => 'اسم المدرس',
     'from' => 'من',
     'to' => 'إلى',
     'filter' => 'تصفية',

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\LateAttendanceMail;
 use App\Models\AttendanceLog;
+use App\Models\DepartmentEmail;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,19 +27,16 @@ class SendLateNotificationJob implements ShouldQueue
 
     public function handle(): void
     {
-        $this->log->load(['instructor.department', 'schedule', 'classroom']);
+        // Find the HOD email for this department
+        if ($this->log->dept_no) {
+            $dept = DepartmentEmail::where('dept_no', $this->log->dept_no)->first();
 
-        $department = $this->log->instructor->department;
-        if (!$department) {
-            Log::warning("No department for instructor {$this->log->instructor_id}, skipping notification");
-            return;
-        }
-
-        // Send to head of department
-        $headUser = $department->head;
-        if ($headUser) {
-            Mail::to($headUser->email)->queue(new LateAttendanceMail($this->log));
-            Log::info("Late notification sent to HOD {$headUser->email} for instructor {$this->log->instructor->name}");
+            if ($dept && $dept->head_email) {
+                Mail::to($dept->head_email)->queue(new LateAttendanceMail($this->log));
+                Log::info("Late notification sent to HOD {$dept->head_email} for instructor {$this->log->instructor_name}");
+            } else {
+                Log::warning("No HOD email configured for dept_no {$this->log->dept_no}");
+            }
         }
 
         // Also notify admins

@@ -5,12 +5,12 @@
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-800">{{ __('messages.welcome') }}, {{ $instructor->localizedName() }}</h1>
+        <h1 class="text-2xl font-bold text-gray-800">{{ __('messages.welcome') }}, {{ $instructorName }}</h1>
         <p class="text-gray-500">{{ now()->translatedFormat('l, F j, Y') }}</p>
     </div>
     <a href="{{ route('scan.page') }}"
         class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-indigo-700 shadow-lg">
-        📱 {{ __('nav.scan') }}
+        {{ __('nav.scan') }}
     </a>
 </div>
 
@@ -39,9 +39,9 @@
         @forelse($todaySchedules as $schedule)
             <div class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b' : '' }}">
                 <div class="flex-1">
-                    <div class="font-medium text-gray-800">{{ $schedule->localizedCourseName() }}</div>
+                    <div class="font-medium text-gray-800">{{ $schedule->course_name }}</div>
                     <div class="text-sm text-gray-500">
-                        {{ $schedule->classroom->fullName() }}
+                        {{ __('scan.room') }} {{ $schedule->room_no }}
                     </div>
                     <div class="text-sm text-gray-400">
                         {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
@@ -50,15 +50,13 @@
                 <div>
                     @if(in_array($schedule->id, $todayAttendance))
                         <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-700">
-                            ✅ {{ __('attendance.present') }}
+                            {{ __('attendance.present') }}
                         </span>
-                    @elseif($schedule->isNow())
+                    @else
                         <a href="{{ route('scan.page') }}"
-                            class="inline-flex px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 animate-pulse">
+                            class="inline-flex px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700">
                             {{ __('instructor.scan_now') }}
                         </a>
-                    @else
-                        <span class="text-gray-400 text-sm">{{ __('instructor.upcoming') }}</span>
                     @endif
                 </div>
             </div>
@@ -77,8 +75,8 @@
         @forelse($recentLogs as $log)
             <div class="px-4 py-3 flex items-center justify-between">
                 <div>
-                    <div class="text-sm font-medium">{{ $log->schedule?->course_name ?? '-' }}</div>
-                    <div class="text-xs text-gray-400">{{ $log->classroom->name }} - {{ $log->scanned_at->format('M d, H:i') }}</div>
+                    <div class="text-sm font-medium">{{ $log->course_name ?? '-' }}</div>
+                    <div class="text-xs text-gray-400">{{ __('scan.room') }} {{ $log->room_no }} - {{ $log->scanned_at->format('M d, H:i') }}</div>
                 </div>
                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                     {{ $log->status === 'present' ? 'bg-green-100 text-green-700' : '' }}

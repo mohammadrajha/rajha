@@ -10,7 +10,7 @@
         <dl class="grid grid-cols-2 gap-4 text-sm">
             <div>
                 <dt class="text-gray-500">{{ __('table.instructor') }}</dt>
-                <dd class="font-medium text-lg">{{ $log->instructor->name }}</dd>
+                <dd class="font-medium text-lg">{{ $log->instructor_name }}</dd>
             </div>
             <div>
                 <dt class="text-gray-500">{{ __('table.status') }}</dt>
@@ -27,11 +27,11 @@
             </div>
             <div>
                 <dt class="text-gray-500">{{ __('table.course') }}</dt>
-                <dd class="font-medium">{{ $log->schedule?->course_name ?? '-' }}</dd>
+                <dd class="font-medium">{{ $log->course_name ?? '-' }}</dd>
             </div>
             <div>
-                <dt class="text-gray-500">{{ __('table.classroom') }}</dt>
-                <dd class="font-medium">{{ $log->classroom->name }}</dd>
+                <dt class="text-gray-500">{{ __('scan.room') }}</dt>
+                <dd class="font-medium">{{ $log->room_no }}</dd>
             </div>
             <div>
                 <dt class="text-gray-500">{{ __('table.time') }}</dt>
@@ -45,10 +45,10 @@
                 <dt class="text-gray-500">{{ __('table.delay') }}</dt>
                 <dd class="font-medium">{{ $log->delay_minutes }} {{ __('scan.minutes') }}</dd>
             </div>
-            @if($log->gps_valid !== null)
+            @if($log->dept_no)
             <div>
-                <dt class="text-gray-500">{{ __('attendance.gps_valid') }}</dt>
-                <dd class="font-medium">{{ $log->gps_valid ? '✅' : '❌' }}</dd>
+                <dt class="text-gray-500">{{ __('scan.dept') }}</dt>
+                <dd class="font-medium">{{ $log->dept_no }}</dd>
             </div>
             @endif
             @if($log->notes)
