@@ -28,8 +28,10 @@
                         <!-- Role-based navigation -->
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.dashboard') }}</a>
+                            <a href="{{ route('admin.room-schedules.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.rooms') }}</a>
                             <a href="{{ route('admin.attendance.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.attendance') }}</a>
                             <a href="{{ route('admin.departments.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.departments') }}</a>
+                            <a href="{{ route('admin.sync-rooms.index') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.sync') }}</a>
                         @elseif(auth()->user()->isHeadOfDepartment())
                             <a href="{{ route('hod.dashboard') }}" class="text-gray-600 hover:text-indigo-600 text-sm">{{ __('nav.dashboard') }}</a>
                         @else
