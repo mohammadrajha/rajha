@@ -56,6 +56,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/departments', [Admin\DepartmentEmailController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}/edit', [Admin\DepartmentEmailController::class, 'edit'])->name('departments.edit');
     Route::put('/departments/{department}', [Admin\DepartmentEmailController::class, 'update'])->name('departments.update');
+
+    // Sync rooms from external API
+    Route::get('/sync-rooms', [Admin\SyncController::class, 'index'])->name('sync-rooms.index');
+    Route::post('/sync-rooms', [Admin\SyncController::class, 'syncRooms'])->name('sync-rooms.run');
 });
 
 // Instructor routes
