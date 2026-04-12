@@ -7,4 +7,5 @@ return [
     'profile_updated' => 'Profile updated successfully',
     'room_schedule_updated' => 'Room schedule updated successfully',
     'room_schedule_deleted' => 'Room schedule deleted successfully',
+    'instructor_email_updated' => 'Instructor account updated successfully',
 ];

@@ -7,4 +7,5 @@ return [
     'profile_updated' => 'تم تحديث الملف الشخصي بنجاح',
     'room_schedule_updated' => 'تم تحديث جدول القاعة بنجاح',
     'room_schedule_deleted' => 'تم حذف جدول القاعة بنجاح',
+    'instructor_email_updated' => 'تم تحديث حساب المدرس بنجاح',
 ];
