@@ -21,7 +21,13 @@
                 <div class="font-bold text-lg text-gray-800">{{ __('rooms_qr.room') }} {{ $room->room_no }}</div>
                 <div class="text-xs text-gray-500 mb-2 h-4">{{ $room->room_desc }}</div>
                 <div class="flex justify-center mb-3">
-                    {!! $qrCodes[$room->room_no] !!}
+                    @if(!empty($qrCodes[$room->room_no]))
+                        {!! $qrCodes[$room->room_no] !!}
+                    @else
+                        <div class="w-[180px] h-[180px] flex items-center justify-center text-xs text-red-400 border border-dashed rounded">
+                            {{ __('rooms_qr.generation_failed') }}
+                        </div>
+                    @endif
                 </div>
                 <a href="{{ route('admin.rooms-qr.print', $room->room_no) }}" target="_blank"
                    class="inline-block text-indigo-600 hover:underline text-sm">

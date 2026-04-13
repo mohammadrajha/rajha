@@ -8,4 +8,5 @@ return [
     'empty' => 'No rooms available. Sync room schedules first.',
     'print' => 'Print',
     'scan_hint' => 'Scan with the Rajha app to mark attendance.',
+    'generation_failed' => 'QR generation failed',
 ];
