@@ -12,12 +12,13 @@
         <!-- Camera QR Scanner -->
         <div id="qr-reader" class="mb-6 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mx-auto" style="max-width: 400px; min-height: 300px;"></div>
 
-        <!-- Manual room number input -->
+        <!-- Manual room code input -->
         <div class="mb-6 max-w-xs mx-auto">
             <label class="block text-sm font-medium text-gray-600 mb-1">{{ __('scan.manual_entry') }}</label>
             <div class="flex space-x-2 rtl:space-x-reverse">
-                <input type="number" id="manual-room" min="1" placeholder="{{ __('scan.room_number_placeholder') }}"
-                    class="flex-1 border rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <input type="text" id="manual-room" inputmode="numeric" autocomplete="off"
+                    placeholder="{{ __('scan.room_number_placeholder') }}"
+                    class="flex-1 border rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono">
                 <button id="manual-submit" class="bg-indigo-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
                     {{ __('scan.go') }}
                 </button>
@@ -45,61 +46,69 @@ document.addEventListener('DOMContentLoaded', function() {
     const manualBtn = document.getElementById('manual-submit');
     let scanning = true;
 
-    // ── Extract room number from QR text ──
-    function extractRoomNo(text) {
-        const trimmed = text.trim();
+    // Status-code → color/icon table matching resources/views/scan/result.blade.php.
+    const STATUS_STYLES = {
+        present:         { bg: 'bg-green-100',  text: 'text-green-700',  icon: '\u2705' },
+        late:            { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: '\u23F1' },
+        wrong_classroom: { bg: 'bg-red-100',    text: 'text-red-700',    icon: '\u274C' },
+        no_lecture:      { bg: 'bg-gray-100',   text: 'text-gray-700',   icon: '\uD83D\uDCED' },
+        duplicate:       { bg: 'bg-blue-100',   text: 'text-blue-700',   icon: '\u2139\uFE0F' },
+        error:           { bg: 'bg-red-100',    text: 'text-red-700',    icon: '\u26A0\uFE0F' },
+    };
 
-        // Pure number
-        if (/^\d+$/.test(trimmed)) return parseInt(trimmed, 10);
+    // ── Extract room code from QR text (preserves leading zeros and non-digits) ──
+    function extractRoomCode(text) {
+        if (text === null || text === undefined) return null;
+        const trimmed = String(text).trim();
+        if (trimmed === '') return null;
 
-        // URL containing /rooms/123 or /room/123
-        const urlMatch = trimmed.match(/\/rooms?\/(\d+)/i);
-        if (urlMatch) return parseInt(urlMatch[1], 10);
+        // Plain code: QR payload is the ROOM_CODE itself (our generator emits exactly this).
+        if (/^[A-Za-z0-9_\-]+$/.test(trimmed)) return trimmed;
 
-        // "Room 20", "room_20", "Room-20", etc.
-        const labelMatch = trimmed.match(/room[\s_\-:#]*(\d+)/i);
-        if (labelMatch) return parseInt(labelMatch[1], 10);
+        // URL containing /rooms/<code> or /room/<code> (defensive for older QRs).
+        const urlMatch = trimmed.match(/\/rooms?\/([A-Za-z0-9_\-]+)/i);
+        if (urlMatch) return urlMatch[1];
+
+        // "Room 10018", "room_10018", "Room-10018", etc.
+        const labelMatch = trimmed.match(/room[\s_\-:#]*([A-Za-z0-9_\-]+)/i);
+        if (labelMatch) return labelMatch[1];
 
         return null;
     }
 
-    // ── Fetch room schedule from our backend ──
-    function fetchRoomSchedule(roomNo) {
+    // ── Post the scanned room code to scan.mark and render the attendance result ──
+    function markAttendance(roomCode) {
         statusEl.innerHTML = `<div class="flex items-center justify-center space-x-2 rtl:space-x-reverse text-indigo-600">
             <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            <span class="font-semibold">{{ __('scan.loading_schedule') }}</span>
+            <span class="font-semibold">{{ __('scan.processing') }}</span>
         </div>`;
         resultsEl.classList.add('hidden');
 
-        fetch('{{ route("room.schedule") }}', {
+        fetch('{{ route("scan.mark") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ room_no: roomNo })
+            body: JSON.stringify({ room_no: roomCode })
         })
-        .then(r => r.json())
-        .then(data => {
+        .then(async r => {
+            const data = await r.json().catch(() => ({}));
+            return { ok: r.ok, status: r.status, data };
+        })
+        .then(({ ok, data }) => {
             statusEl.innerHTML = '';
-
-            if (data.status === 'error') {
-                statusEl.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-                    <div class="text-2xl mb-1">&#9888;&#65039;</div>
-                    <div class="font-semibold">${data.message}</div>
-                </div>`;
-                scanning = true;
-                return;
-            }
-
-            renderSchedule(roomNo, data.schedules || []);
-            scanning = true;
+            const payload = data || {};
+            const status = payload.status || (ok ? 'error' : 'error');
+            renderAttendanceResult(roomCode, status, payload);
+            // Re-enable scanning after a short cooldown so the instructor can retry if needed.
+            setTimeout(() => { scanning = true; }, 2000);
         })
-        .catch(err => {
+        .catch(() => {
             statusEl.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
                 <div class="font-semibold">{{ __('scan.error') }}</div>
             </div>`;
@@ -107,59 +116,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ── Render schedule table ──
-    function renderSchedule(roomNo, schedules) {
-        if (schedules.length === 0) {
-            resultsEl.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
-                    <div class="text-4xl mb-3">&#128237;</div>
-                    <h2 class="text-xl font-bold text-gray-700">{{ __('scan.room') }} ${roomNo}</h2>
-                    <p class="text-gray-500 mt-2">{{ __('scan.no_schedule_found') }}</p>
-                </div>`;
-            resultsEl.classList.remove('hidden');
-            return;
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    // ── Render the attendance-mark result card (same shape as scan/result.blade.php) ──
+    function renderAttendanceResult(roomCode, status, payload) {
+        const style = STATUS_STYLES[status] || STATUS_STYLES.error;
+        const message = payload.message || '{{ __('scan.error') }}';
+
+        let extra = '';
+        if (payload.correct_room) {
+            extra += `<div class="mt-3 text-base">
+                {{ __('scan.correct_classroom') }}:
+                <strong>{{ __('scan.room') }} ${escapeHtml(payload.correct_room)}</strong>
+            </div>`;
+        }
+        if (typeof payload.delay_minutes !== 'undefined' && payload.delay_minutes !== null) {
+            extra += `<div class="mt-2 text-base">
+                {{ __('scan.delay') }}: ${escapeHtml(payload.delay_minutes)} {{ __('scan.minutes') }}
+            </div>`;
         }
 
-        let rows = '';
-        schedules.forEach(function(s) {
-            rows += `
-            <tr class="hover:bg-gray-50 border-b last:border-0">
-                <td class="px-4 py-3">
-                    <div class="font-semibold text-gray-800">${s.course_name}</div>
-                    <div class="text-sm text-gray-500 mt-0.5">${s.instructor_name}</div>
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <span class="inline-block bg-indigo-50 text-indigo-700 text-sm font-medium px-2.5 py-1 rounded-full">${s.day}</span>
-                </td>
-                <td class="px-4 py-3 text-center font-mono text-sm">
-                    ${s.start_time} - ${s.end_time}
-                </td>
-                <td class="px-4 py-3 text-center text-sm text-gray-500">${s.dept_no}</td>
-            </tr>`;
-        });
+        const instructorEmail = payload.instructor_email
+            ? `<div class="mt-2 text-xs text-gray-500 font-mono">${escapeHtml(payload.instructor_email)}</div>`
+            : '';
 
         resultsEl.innerHTML = `
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="bg-indigo-600 text-white px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-bold">{{ __('scan.room') }} ${roomNo}</h2>
-                        <p class="text-indigo-200 text-sm">{{ __('scan.semester') }}: 20252 &middot; ${schedules.length} {{ __('scan.lectures') }}</p>
-                    </div>
-                    <div class="text-3xl">&#127979;</div>
+            <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <div class="${style.bg} ${style.text} p-8 rounded-xl">
+                    <div class="text-5xl mb-4">${style.icon}</div>
+                    <div class="text-xl font-bold">${escapeHtml(message)}</div>
+                    ${extra}
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="px-4 py-3 text-start font-medium">{{ __('scan.course_instructor') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('scan.day') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('scan.time') }}</th>
-                                <th class="px-4 py-3 text-center font-medium">{{ __('scan.dept') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
+                <div class="mt-6 text-sm text-gray-500">
+                    {{ __('scan.scanned_classroom') }}:
+                    <span class="font-mono">{{ __('scan.room') }} ${escapeHtml(roomCode)}</span>
                 </div>
+                ${instructorEmail}
             </div>`;
         resultsEl.classList.remove('hidden');
     }
@@ -169,25 +165,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!scanning) return;
         scanning = false;
 
-        const roomNo = extractRoomNo(decodedText);
-        if (!roomNo) {
+        const roomCode = extractRoomCode(decodedText);
+        if (!roomCode) {
             statusEl.innerHTML = `<div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-4 rounded-lg">
                 <div class="font-semibold">{{ __('scan.invalid_room_qr') }}</div>
-                <div class="text-sm mt-1">{{ __('scan.scanned_value') }}: <code class="bg-yellow-100 px-1 rounded">${decodedText}</code></div>
+                <div class="text-sm mt-1">{{ __('scan.scanned_value') }}: <code class="bg-yellow-100 px-1 rounded">${escapeHtml(decodedText)}</code></div>
             </div>`;
             setTimeout(() => { scanning = true; }, 3000);
             return;
         }
 
-        manualInput.value = roomNo;
-        fetchRoomSchedule(roomNo);
+        manualInput.value = roomCode;
+        markAttendance(roomCode);
     }
 
     // ── Manual entry ──
     manualBtn.addEventListener('click', function() {
-        const val = parseInt(manualInput.value, 10);
-        if (!val || val < 1) return;
-        fetchRoomSchedule(val);
+        const val = (manualInput.value || '').trim();
+        if (val === '') return;
+        scanning = false;
+        markAttendance(val);
     });
     manualInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
