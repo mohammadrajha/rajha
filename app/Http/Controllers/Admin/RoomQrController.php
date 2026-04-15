@@ -54,6 +54,19 @@ class RoomQrController extends Controller
     }
 
     /**
+     * Absolute URL the room QR should point at. Scanning with any camera
+     * app opens this URL directly, which lands on ScanController@scanRoom
+     * (behind the auth middleware) and records attendance in one step.
+     *
+     * Route parameters are already constrained to [A-Za-z0-9_-]+, so the
+     * sanitized code drops straight into the URL without further encoding.
+     */
+    private static function scanUrl(string $code): string
+    {
+        return route('scan.process', ['roomNo' => $code]);
+    }
+
+    /**
      * Reduce a room code to plain ASCII alphanumerics plus `_` and `-`.
      *
      * bacon-qr-code defaults to ISO-8859-1 byte-mode encoding. Any non-Latin
@@ -80,20 +93,24 @@ class RoomQrController extends Controller
         if ($code === '') {
             return null;
         }
+        // QR payload is the absolute URL of the scan endpoint, so scanning
+        // with any camera app opens the page directly instead of showing
+        // plain text. The URL only contains ASCII (route, host, room code)
+        // so ISO-8859-1 byte-mode encoding is always safe; UTF-8 ECI is
+        // kept as a belt-and-braces guard in case APP_URL ever changes.
+        $payload = self::scanUrl($code);
         try {
             return (new Generator())
                 ->format('svg')
                 ->size($size)
                 ->margin(1)
                 ->errorCorrection('M')
-                // Force UTF-8 ECI mode so byte-mode encoding never falls back
-                // to the broken ISO-8859-1 path even if input ever contains
-                // an unexpected character.
                 ->encoding('UTF-8')
-                ->generate($code);
+                ->generate($payload);
         } catch (\Throwable $e) {
             Log::warning('QR generation failed for room', [
                 'room_no' => $code,
+                'payload' => $payload,
                 'error'   => $e->getMessage(),
             ]);
             return null;

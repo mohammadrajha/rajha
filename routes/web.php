@@ -31,10 +31,19 @@ Route::get('/home', function () {
     };
 })->middleware('auth')->name('home');
 
-// Scan routes (instructor must be logged in)
+// Scan routes (instructor must be logged in).
+//
+// The primary flow is the direct URL: the room QR encodes
+// GET /scan/{roomNo}, so scanning with any camera app opens the page
+// and ScanController@scanRoom records attendance immediately.
+//
+// GET /scan is only a manual fallback landing page for instructors
+// who typed the URL without a room code.
 Route::middleware('auth')->group(function () {
     Route::get('/scan', [ScanController::class, 'showScanPage'])->name('scan.page');
-    Route::post('/scan/mark', [ScanController::class, 'markAttendance'])->name('scan.mark');
+    Route::get('/scan/{roomNo}', [ScanController::class, 'scanRoom'])
+        ->where('roomNo', '[A-Za-z0-9_\-]+')
+        ->name('scan.process');
 });
 
 // Room schedule lookup (QR scan -> room API)

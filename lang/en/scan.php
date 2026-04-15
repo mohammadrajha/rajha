@@ -4,6 +4,7 @@ return [
     'title' => 'Scan QR Code',
     'result_title' => 'Scan Result',
     'instructions' => 'Point your camera at the room QR code, or enter the room number manually',
+    'direct_hint' => 'Scan the printed room QR with your phone camera — attendance is recorded automatically. If you landed here by typing the URL, enter a room code below.',
     'processing' => 'Processing...',
     'correct_classroom' => 'Correct classroom',
     'delay' => 'Delay',
